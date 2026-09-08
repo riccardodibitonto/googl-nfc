@@ -1,0 +1,14 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npm install": true,
+        "mkdir": true,
+        "/^pwd && ls -la && node --version && npm --version$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npx create-next-app@latest": true,
+        "npm run build": true,
+        "npm run dev": true,
+        "npm run lint": true
+    }
+}

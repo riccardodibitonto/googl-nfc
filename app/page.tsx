@@ -13,6 +13,7 @@ import {
   ExternalLink,
   LayoutDashboard,
   Menu,
+  Moon,
   Package,
   Pencil,
   Plus,
@@ -21,6 +22,7 @@ import {
   ShoppingBag,
   Sparkles,
   Store,
+  Sun,
   Trash2,
   Users,
   X,
@@ -87,6 +89,7 @@ export default function Home() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   const notify = (message: string) => {
     setToast(message);
@@ -106,6 +109,15 @@ export default function Home() {
   // Initial hydration must come from the database, not from client-side demo state.
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { void loadData(); }, []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setDarkMode(window.localStorage.getItem("review-cards-theme") === "dark");
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    window.localStorage.setItem("review-cards-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const totals = useMemo(() => {
     const purchased = purchases.reduce((sum, item) => sum + item.quantity, 0);
@@ -132,7 +144,7 @@ export default function Home() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${darkMode ? "dark-mode" : ""}`}>
       <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
         <div className="brand">
           <div className="brand-mark"><Sparkles size={17} fill="currentColor" /></div>
@@ -146,7 +158,7 @@ export default function Home() {
         <div className="sidebar-bottom"><div className="help-card"><CircleHelp size={17} className="text-[#7082a0]" /><div><p className="text-xs font-semibold text-[#4c5a70]">Hai bisogno di aiuto?</p><p className="mt-1 text-[10px] text-[#909bad]">Consulta la guida rapida</p></div></div><div className="user-row"><div className="avatar">RD</div><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#465268]">Riccardo Di Bitonto</p><p className="text-[10px] text-[#9aa3b3]">Amministratore</p></div><ChevronDown size={14} className="text-[#98a1b0]" /></div></div>
       </aside>
       <main className="main-content">
-        <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(!mobileNav)}><Menu size={20} /></button><div><p className="eyebrow">MARTEDÌ, 8 SETTEMBRE 2026</p><h1>{view === "Dashboard" ? "Buongiorno, Riccardo" : view}</h1></div><div className="top-actions"><div className="top-search"><Search size={16} /><input placeholder="Cerca..." value={search} onChange={(event) => setSearch(event.target.value)} /></div><button className="icon-button"><CircleHelp size={18} /></button><div className="avatar top-avatar">RD</div></div></header>
+        <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(!mobileNav)}><Menu size={20} /></button><div><p className="eyebrow">MARTEDÌ, 8 SETTEMBRE 2026</p><h1>{view === "Dashboard" ? "Buongiorno, Riccardo" : view}</h1></div><div className="top-actions"><div className="top-search"><Search size={16} /><input placeholder="Cerca..." value={search} onChange={(event) => setSearch(event.target.value)} /></div><button className="icon-button theme-toggle" onClick={() => setDarkMode((value) => !value)} aria-label={darkMode ? "Attiva tema chiaro" : "Attiva tema scuro"} title={darkMode ? "Tema chiaro" : "Tema scuro"}>{darkMode ? <Sun size={18} /> : <Moon size={18} />}</button><button className="icon-button"><CircleHelp size={18} /></button><div className="avatar top-avatar">RD</div></div></header>
         {loading ? <div className="page-body"><div className="panel p-8 text-sm text-[#7a879a]">Caricamento dati dal database...</div></div> : view === "Dashboard" ? <Dashboard totals={totals} clientCount={clients.length} sales={sales} purchases={purchases} onAction={setModal} /> : <SectionView view={view} clients={filteredClients} totals={totals} sales={sales} purchases={purchases} onAction={setModal} copyLink={copyLink} onEdit={(client) => { const name = window.prompt("Nome attività", client.name); if (!name || name === client.name) return; void mutate("/api/clients", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: client.id, name, country: client.country, google_place_id: client.google_place_id, google_review_url: client.url }) }, "Cliente aggiornato"); }} onDelete={(type, id) => { if (!window.confirm(`Sei sicuro di voler eliminare questo ${type}?`)) return; void mutate(`/api/${type === "cliente" ? "clients" : type === "acquisto" ? "purchases" : "sales"}?id=${id}`, { method: "DELETE" }, `${type[0].toUpperCase()}${type.slice(1)} eliminato`); }} />}
       </main>
       {modal === "purchase" && <PurchaseModal available={totals.available} onClose={() => setModal(null)} onSave={async (item) => { if (await mutate("/api/purchases", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quantity: item.quantity, total_cost: item.total, purchase_date: item.date }) }, "Acquisto registrato")) setModal(null); }} />}

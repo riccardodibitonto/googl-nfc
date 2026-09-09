@@ -25,9 +25,13 @@ export default function LoginPage() {
         return;
       }
     } catch (error) {
-      setError(error instanceof Error && error.message.includes("non configurato")
-        ? "Configura NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY (oppure NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) nelle variabili Vercel, poi ridistribuisci l'app."
-        : "Supabase Auth non è configurato correttamente.");
+      setError(error instanceof Error && error.message.includes("NEXT_PUBLIC_SUPABASE_URL")
+        ? "Manca NEXT_PUBLIC_SUPABASE_URL nelle variabili Vercel. Aggiungila come URL base del progetto e ridistribuisci l'app."
+        : error instanceof Error && error.message.includes("chiave pubblica")
+          ? "Manca una chiave pubblica NEXT_PUBLIC_SUPABASE_* nelle variabili Vercel. Aggiungila e ridistribuisci l'app."
+          : error instanceof Error && error.message.includes("non configurato")
+            ? "Configura le variabili pubbliche Supabase in Vercel, poi ridistribuisci l'app."
+            : "Supabase Auth non è configurato correttamente.");
       setLoading(false);
       return;
     }

@@ -93,6 +93,7 @@ Per usare la ricerca reale è necessario abilitare **Places API** e **Billing** 
 | `NEXT_PUBLIC_SUPABASE_URL` | URL base del progetto Supabase, senza `/rest/v1` (es. `https://project.supabase.co`; il client normalizza comunque il vecchio formato) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chiave pubblica Supabase per il client |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Nome alternativo della chiave pubblica usato da alcune integrazioni Supabase/Vercel |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Altro nome pubblico usato da alcune integrazioni Vercel |
 | `SUPABASE_PUBLISHABLE_KEY` | Nome alternativo server-side della chiave pubblica |
 | `SUPABASE_SECRET_KEY` | Nome moderno della chiave privata/service role usato da alcune integrazioni Supabase/Vercel |
 | `SUPABASE_URL` | Nome alternativo dell'URL usato da alcune integrazioni Vercel (server-side) |

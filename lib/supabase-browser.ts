@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-url";
+import { getSupabasePublicKey, getSupabasePublicUrl } from "@/lib/supabase-url";
 
 export function getSupabaseBrowser() {
-  return createBrowserClient(getSupabaseUrl(), getSupabaseAnonKey());
+  return createBrowserClient(getSupabasePublicUrl(), getSupabasePublicKey());
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -27,6 +28,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type View = "Dashboard" | "Clienti" | "Inventario" | "Acquisti" | "Vendite" | "Impostazioni";
 type Client = { id: string; name: string; initials: string; color: string; country: string; cards: number; delivered: number; revenue: number; url: string; google_place_id?: string };
@@ -80,6 +82,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 }
 
 export default function Home() {
+  const router = useRouter();
   const [view, setView] = useState<View>("Dashboard");
   const [mobileNav, setMobileNav] = useState(false);
   const [modal, setModal] = useState<"purchase" | "sale" | "client" | null>(null);
@@ -143,6 +146,12 @@ export default function Home() {
     notify("Link copiato negli appunti");
   }
 
+  async function signOut() {
+    await getSupabaseBrowser().auth.signOut();
+    router.replace("/login");
+    router.refresh();
+  }
+
   return (
     <div className={`app-shell ${darkMode ? "dark-mode" : ""}`}>
       <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
@@ -155,7 +164,7 @@ export default function Home() {
         <nav className="space-y-1">
           {nav.map(({ label, icon: Icon }) => <button key={label} onClick={() => { setView(label); setMobileNav(false); }} className={`nav-item ${view === label ? "active" : ""}`}><Icon size={17} /><span>{label}</span>{label === "Clienti" && <span className="nav-count">{clients.length}</span>}</button>)}
         </nav>
-        <div className="sidebar-bottom"><div className="help-card"><CircleHelp size={17} className="text-[#7082a0]" /><div><p className="text-xs font-semibold text-[#4c5a70]">Hai bisogno di aiuto?</p><p className="mt-1 text-[10px] text-[#909bad]">Consulta la guida rapida</p></div></div><div className="user-row"><div className="avatar">RD</div><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#465268]">Riccardo Di Bitonto</p><p className="text-[10px] text-[#9aa3b3]">Amministratore</p></div><ChevronDown size={14} className="text-[#98a1b0]" /></div></div>
+        <div className="sidebar-bottom"><div className="help-card"><CircleHelp size={17} className="text-[#7082a0]" /><div><p className="text-xs font-semibold text-[#4c5a70]">Hai bisogno di aiuto?</p><p className="mt-1 text-[10px] text-[#909bad]">Consulta la guida rapida</p></div></div><button className="user-row user-menu" onClick={() => void signOut()} title="Esci"><div className="avatar">RD</div><div className="min-w-0 flex-1 text-left"><p className="truncate text-xs font-semibold text-[#465268]">Riccardo Di Bitonto</p><p className="text-[10px] text-[#9aa3b3]">Esci dall’account</p></div><ChevronDown size={14} className="text-[#98a1b0]" /></button></div>
       </aside>
       <main className="main-content">
         <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(!mobileNav)}><Menu size={20} /></button><div><p className="eyebrow">MARTEDÌ, 8 SETTEMBRE 2026</p><h1>{view === "Dashboard" ? "Buongiorno, Riccardo" : view}</h1></div><div className="top-actions"><div className="top-search"><Search size={16} /><input placeholder="Cerca..." value={search} onChange={(event) => setSearch(event.target.value)} /></div><button className="icon-button theme-toggle" onClick={() => setDarkMode((value) => !value)} aria-label={darkMode ? "Attiva tema chiaro" : "Attiva tema scuro"} title={darkMode ? "Tema chiaro" : "Tema scuro"}>{darkMode ? <Sun size={18} /> : <Moon size={18} />}</button><button className="icon-button"><CircleHelp size={18} /></button><div className="avatar top-avatar">RD</div></div></header>

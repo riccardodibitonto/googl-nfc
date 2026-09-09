@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasAuthenticatedUser } from "@/lib/require-auth";
 
 export async function GET() {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const supabase = getSupabaseAdmin();
     const [clients, purchases, sales] = await Promise.all([
       supabase.from("clients").select("*").order("created_at", { ascending: false }),

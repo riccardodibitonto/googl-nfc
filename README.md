@@ -12,6 +12,7 @@ Gestionale interno per clienti, acquisti e consegne di schede fisiche NFC/QR usa
 - Storico centralizzato dei movimenti.
 - Ricerca Google Places predisposta server-side, con fallback Place ID per sviluppo.
 - UI responsive in italiano con validazione base e feedback delle operazioni.
+- Accesso protetto con Supabase Auth email/password per l'amministratore.
 
 I dati operativi non sono demo: la UI legge e scrive Supabase tramite Route Handler server-side. Se Supabase non è configurato, l'app mostra l'errore di configurazione invece di sostituire i dati con dati fittizi.
 
@@ -23,6 +24,7 @@ Next.js (App Router), TypeScript, React, Tailwind CSS v4, Lucide React, Supabase
 
 ```text
 app/
+login/page.tsx       # accesso amministratore, senza registrazione
   api/places/search/route.ts # ricerca Google server-side
   globals.css       # design system e layout responsive
   layout.tsx        # metadata e shell HTML
@@ -88,7 +90,7 @@ Per usare la ricerca reale è necessario abilitare **Places API** e **Billing** 
 
 | Variabile | Uso |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL base del progetto Supabase, senza `/rest/v1` (es. `https://project.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL base del progetto Supabase, senza `/rest/v1` (es. `https://project.supabase.co`; il client normalizza comunque il vecchio formato) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chiave pubblica Supabase per il client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chiave privata server-side, mai nel browser |
 | `GOOGLE_PLACES_API_KEY` | Chiave privata Google Places, mai nel browser |
@@ -108,10 +110,25 @@ Aprire `http://localhost:3000`. Configurare Supabase e applicare la migration co
 1. Creare un progetto vuoto su Supabase.
 2. Aprire **SQL Editor**, creare una nuova query e incollare tutto il contenuto di [`supabase/migrations/001_initial.sql`](./supabase/migrations/001_initial.sql).
 3. Eseguire la query.
-4. Copiare URL e service-role key in `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`).
+4. Copiare URL e service-role key in `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` deve essere l'URL base del progetto, senza `/rest/v1`, insieme a `SUPABASE_SERVICE_ROLE_KEY`).
 5. Avviare `npm run dev`.
 
 La migration non inserisce dati demo. Un eventuale seed deve essere eseguito separatamente e intenzionalmente; al momento il progetto non ne richiede uno.
+
+### Autenticazione amministratore
+
+L'accesso usa Supabase Auth con email e password. Non esiste una pagina di
+registrazione: crea manualmente l'unico utente da **Authentication → Users →
+Add user** nel progetto Supabase, quindi disabilita **Allow new users to sign
+up** nelle impostazioni Auth. La dashboard e tutte le API operative richiedono
+una sessione valida; gli utenti anonimi vengono reindirizzati a `/login` o
+ricevono `401` sulle API.
+
+La sessione viene gestita con cookie HttpOnly/secure tramite `@supabase/ssr`.
+La `SUPABASE_SERVICE_ROLE_KEY` resta usata solo nei Route Handler server-side
+per le transazioni esistenti; non viene mai inviata al browser. Il proxy
+Next.js aggiorna la sessione e svolge il controllo preliminare, mentre le
+operazioni dati continuano a essere autorizzate server-side.
 
 Le funzioni PostgreSQL rendono atomiche le scritture: acquisto/vendita e relativo movimento vengono creati nella stessa transazione. Una vendita viene rifiutata se supera l'inventario, con `pg_advisory_xact_lock` acquisito prima del controllo per evitare overselling concorrente. L'eliminazione di una vendita elimina prima il movimento; l'eliminazione di un acquisto viene rifiutata se renderebbe il saldo negativo; un cliente con vendite associate è protetto da `ON DELETE RESTRICT`.
 

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasAuthenticatedUser } from "@/lib/require-auth";
 
 export async function POST(request: Request) {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const body = await request.json();
     const quantity = Number(body.quantity), total = Number(body.total_cost);
     if (!Number.isInteger(quantity) || quantity <= 0 || !Number.isFinite(total) || total < 0) return NextResponse.json({ error: "Quantità e costo non validi." }, { status: 400 });
@@ -20,6 +22,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const id = new URL(request.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Acquisto non specificato." }, { status: 400 });
     const { data, error } = await getSupabaseAdmin().rpc("delete_purchase", { p_purchase_id: id });

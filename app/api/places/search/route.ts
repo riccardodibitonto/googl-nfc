@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { hasAuthenticatedUser } from "@/lib/require-auth";
 
 export async function GET(request: Request) {
+  if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name")?.trim();
   const country = searchParams.get("country")?.trim();

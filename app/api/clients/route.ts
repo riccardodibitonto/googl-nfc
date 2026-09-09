@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasAuthenticatedUser } from "@/lib/require-auth";
 
 export async function POST(request: Request) {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const body = await request.json();
     if (!body.name?.trim() || !body.country?.trim()) return NextResponse.json({ error: "Nome e paese sono obbligatori." }, { status: 400 });
     const { data, error } = await getSupabaseAdmin().from("clients").insert({
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const body = await request.json();
     if (!body.id || !body.name?.trim() || !body.country?.trim()) return NextResponse.json({ error: "Dati cliente non validi." }, { status: 400 });
     const { data, error } = await getSupabaseAdmin().from("clients").update({ name: body.name.trim(), country: body.country.trim(), address: body.address?.trim() || null, google_place_id: body.google_place_id || null, google_review_url: body.google_review_url || null, notes: body.notes?.trim() || null, updated_at: new Date().toISOString() }).eq("id", body.id).select().single();
@@ -31,6 +34,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    if (!await hasAuthenticatedUser()) return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
     const id = new URL(request.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Cliente non specificato." }, { status: 400 });
     const supabase = getSupabaseAdmin();

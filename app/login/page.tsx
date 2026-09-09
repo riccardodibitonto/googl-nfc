@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Sparkles } from "lucide-react";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,9 +17,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { error: signInError } = await getSupabaseBrowser().auth.signInWithPassword({ email, password });
-      if (signInError) {
-        setError(signInError.message.includes("Invalid login credentials") ? "Email o password non valide." : "Impossibile completare l'accesso. Verifica la configurazione Supabase Auth.");
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        setError(payload.error ?? "Impossibile completare l'accesso.");
         setLoading(false);
         return;
       }

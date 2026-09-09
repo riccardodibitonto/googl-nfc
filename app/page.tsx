@@ -28,7 +28,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type View = "Dashboard" | "Clienti" | "Inventario" | "Acquisti" | "Vendite" | "Impostazioni";
 type Client = { id: string; name: string; initials: string; color: string; country: string; cards: number; delivered: number; revenue: number; url: string; google_place_id?: string };
@@ -147,7 +146,7 @@ export default function Home() {
   }
 
   async function signOut() {
-    await getSupabaseBrowser().auth.signOut();
+    await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
     router.refresh();
   }

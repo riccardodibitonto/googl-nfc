@@ -130,6 +130,8 @@ una sessione valida; gli utenti anonimi vengono reindirizzati a `/login` o
 ricevono `401` sulle API.
 
 La sessione viene gestita con cookie HttpOnly/secure tramite `@supabase/ssr`.
+Il form di accesso chiama `/api/auth/login`: le credenziali vengono inviate
+solo al server, quindi il browser non dipende da variabili `NEXT_PUBLIC_*`.
 La `SUPABASE_SERVICE_ROLE_KEY` resta usata solo nei Route Handler server-side
 per le transazioni esistenti; non viene mai inviata al browser. Il proxy
 Next.js aggiorna la sessione e svolge il controllo preliminare, mentre le

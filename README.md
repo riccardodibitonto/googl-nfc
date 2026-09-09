@@ -92,6 +92,10 @@ Per usare la ricerca reale è necessario abilitare **Places API** e **Billing** 
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL base del progetto Supabase, senza `/rest/v1` (es. `https://project.supabase.co`; il client normalizza comunque il vecchio formato) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chiave pubblica Supabase per il client |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Nome alternativo della chiave pubblica usato da alcune integrazioni Supabase/Vercel |
+| `SUPABASE_PUBLISHABLE_KEY` | Nome alternativo server-side della chiave pubblica |
+| `SUPABASE_SECRET_KEY` | Nome moderno della chiave privata/service role usato da alcune integrazioni Supabase/Vercel |
+| `SUPABASE_URL` | Nome alternativo dell'URL usato da alcune integrazioni Vercel (server-side) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chiave privata server-side, mai nel browser |
 | `GOOGLE_PLACES_API_KEY` | Chiave privata Google Places, mai nel browser |
 
@@ -136,7 +140,23 @@ Le funzioni usano `SECURITY DEFINER` perché gli endpoint server-side devono pot
 
 ## Deploy
 
-Il progetto è compatibile con Vercel: importare il repository, impostare le variabili d'ambiente Production/Preview e usare `npm run build`.
+Il progetto è compatibile con Vercel:
+
+1. Importare il repository.
+2. In **Project Settings → Environment Variables**, verificare che l'integrazione
+   abbia creato URL e chiave pubblica. Il codice supporta sia
+   `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`, sia i nomi
+   alternativi `SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` usati da
+   alcune integrazioni. L'URL deve essere `https://<project>.supabase.co`, senza
+   `/rest/v1`. Configurare inoltre `SUPABASE_SERVICE_ROLE_KEY` e
+   `GOOGLE_PLACES_API_KEY` almeno per **Production** (e **Preview** se serve).
+3. Aggiungere `SUPABASE_SERVICE_ROLE_KEY` e `GOOGLE_PLACES_API_KEY` solo come
+   variabili server-side, mai nel codice client.
+4. Eseguire un nuovo deployment dopo aver salvato le variabili: Vercel non
+   aggiorna i deployment già creati automaticamente.
+5. In Supabase, in **Authentication → URL Configuration**, impostare la
+   **Site URL** sull'URL Vercel pubblico e aggiungerlo agli **Additional
+   Redirect URLs** (incluso l'eventuale dominio preview usato per i test).
 
 ## Stato e regole importanti
 

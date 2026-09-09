@@ -24,8 +24,10 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-    } catch {
-      setError("Supabase Auth non è configurato correttamente.");
+    } catch (error) {
+      setError(error instanceof Error && error.message.includes("non configurato")
+        ? "Configura NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY nelle variabili Vercel, poi ridistribuisci l'app."
+        : "Supabase Auth non è configurato correttamente.");
       setLoading(false);
       return;
     }

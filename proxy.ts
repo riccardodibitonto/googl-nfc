@@ -4,39 +4,54 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-url";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) {
-    return response;
-  }
-
-  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-      },
-    },
-  });
-
-  const { data: { user } } = await supabase.auth.getUser();
   const isLogin = request.nextUrl.pathname === "/login";
   const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth/");
 
-  if (!user && !isLogin && !isAuthApi) {
+  const hasUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
+  const hasKey = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY,
+  );
+  if (!hasUrl || !hasKey) {
+    if (isLogin || isAuthApi) return response;
     if (request.nextUrl.pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
+      return NextResponse.json({ error: "Autenticazione Supabase non configurata." }, { status: 503 });
     }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (user && isLogin) {
-    return NextResponse.redirect(new URL("/", request.url));
+  try {
+    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user && !isLogin && !isAuthApi) {
+      if (request.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Autenticazione richiesta." }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    if (user && isLogin) return NextResponse.redirect(new URL("/", request.url));
+    return response;
+  } catch (error) {
+    console.error("Supabase Auth proxy error", error);
+    if (isLogin || isAuthApi) return response;
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Impossibile verificare l'autenticazione." }, { status: 503 });
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  return response;
 }
 
 export const config = {
